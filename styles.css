@@ -1,0 +1,123 @@
+/**
+ * PathCurator module styles - minimal custom styles using Bootstrap 4
+ */
+
+/* Content warning styling */
+.pathcurator-content-warning summary {
+    cursor: pointer;
+    font-weight: 600;
+    list-style: none;
+}
+
+.pathcurator-content-warning summary::-webkit-details-marker {
+    display: none;
+}
+
+.pathcurator-content-warning summary::before {
+    content: '▶ ';
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.2s;
+}
+
+.pathcurator-content-warning[open] summary::before {
+    transform: rotate(90deg);
+}
+
+/* Step styling for details/summary elements */
+.pathcurator-step {
+    margin-bottom: 1rem;
+}
+
+.pathcurator-step summary {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: #212529;
+    list-style: none;
+}
+
+.pathcurator-step summary::-webkit-details-marker {
+    display: none;
+}
+
+.pathcurator-step summary::before {
+    content: '▶ ';
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.2s;
+}
+
+.pathcurator-step[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.pathcurator-step summary:hover {
+    background-color: #e9ecef;
+    color: #212529;
+}
+
+.pathcurator-step summary:focus {
+    outline: 2px solid #007bff;
+    outline-offset: -2px;
+}
+
+.pathcurator-step-content {
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+    border-top: 0;
+    border-radius: 0 0 0.25rem 0.25rem;
+    background-color: #fff;
+}
+
+/* Enhanced card styling for bookmarks */
+.card.border-primary {
+    border-width: 0 0 0 4px;
+}
+
+.card.border-secondary {
+    border-width: 0 0 0 4px;
+}
+
+/* Launch button enhancements */
+.pathcurator-launch-btn.btn-success::after {
+    content: ' ✓';
+}
+
+/* Search functionality */
+.search-highlight {
+    background-color: #ffeb3b;
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+#pathcurator-search {
+    border-radius: 0.25rem;
+}
+
+#pathcurator-search:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+#pathcurator-search-results {
+    font-size: 0.9rem;
+    line-height: 2.2;
+}
+
+/* Progress bar styling */
+#pathcurator-progress-bar {
+    transition: width 0.6s ease;
+    font-weight: bold;
+    font-size: 0.9rem;
+    line-height: 30px;
+}
+
+#pathcurator-progress-text {
+    color: #495057;
+    font-size: 0.95rem;
+}
