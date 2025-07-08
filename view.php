@@ -285,24 +285,42 @@ require(['jquery'], function($) {
         });
         
         // Scroll to top functionality
-        $('#pathcurator-scroll-top').on('click', function(e) {
+        $(document).on('click', '#pathcurator-scroll-top', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             console.log('Scroll to top clicked');
-            $('html, body').animate({scrollTop: 0}, 500);
+            
+            // Method 1: Scroll to the top of the page header
+            var pageHeader = $('#page-header');
+            if (pageHeader.length) {
+                pageHeader[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return false;
+            }
+            
+            // Method 2: Scroll to top of the PathCurator content
+            var pathcuratorIntro = $('#pathcuratorintro');
+            if (pathcuratorIntro.length) {
+                pathcuratorIntro[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return false;
+            }
+            
+            // Method 3: Force scroll all possible containers
+            $('html, body').scrollTop(0);
+            $('#page-wrapper').scrollTop(0);
+            $('#page').scrollTop(0);
+            $('#region-main').scrollTop(0);
+            $('.main-inner').scrollTop(0);
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+            window.scrollTo(0, 0);
+            
+            // Method 4: As a last resort, reload the page with anchor
+            // window.location.href = '#';
+            
             return false;
         });
         
-        // Show/hide scroll to top button based on scroll position
-        $(window).on('scroll', function() {
-            var scrollTop = $(window).scrollTop();
-            
-            // Show button when scrolled down more than 200px
-            if (scrollTop > 200) {
-                $('#pathcurator-scroll-top').show();
-            } else {
-                $('#pathcurator-scroll-top').hide();
-            }
-        });
+        // Scroll to top button is always visible
         
         // Initialize progress display
         updateProgress();
@@ -375,7 +393,6 @@ if (!empty($pathcurator->jsondata)) {
         
         // Progress bar section
         echo html_writer::start_div('mb-3');
-        echo html_writer::tag('h6', get_string('progresstitle', 'pathcurator'), array('class' => 'mb-2 text-muted'));
         echo html_writer::start_div('row align-items-center');
         echo html_writer::start_div('col-md-8');
         echo html_writer::start_div('progress', array('style' => 'height: 25px;'));
@@ -422,6 +439,8 @@ if (!empty($pathcurator->jsondata)) {
         ));
         echo html_writer::end_div(); // input-group-append
         echo html_writer::end_div(); // input-group
+        // Search results text below search input
+        echo html_writer::tag('small', '', array('id' => 'pathcurator-search-results', 'class' => 'text-muted d-block mt-1'));
         echo html_writer::end_div(); // col-md-6
         
         // Controls and search results
@@ -434,16 +453,15 @@ if (!empty($pathcurator->jsondata)) {
             array('class' => 'btn btn-outline-primary btn-sm', 'id' => 'pathcurator-expand-all'));
         echo html_writer::tag('button', get_string('collapseall', 'pathcurator'), 
             array('class' => 'btn btn-outline-secondary btn-sm', 'id' => 'pathcurator-collapse-all'));
-        echo html_writer::tag('button', '↑', array(
-            'class' => 'btn btn-outline-dark btn-sm',
-            'id' => 'pathcurator-scroll-top',
-            'title' => get_string('scrolltotop', 'pathcurator'),
-            'style' => 'display: none;'
-        ));
+        echo html_writer::tag('button', 
+            html_writer::tag('i', '', array('class' => 'fa fa-arrow-up')), 
+            array(
+                'class' => 'btn btn-outline-dark btn-sm',
+                'id' => 'pathcurator-scroll-top',
+                'title' => get_string('scrolltotop', 'pathcurator')
+            )
+        );
         echo html_writer::end_div(); // btn-group
-        
-        // Search results
-        echo html_writer::tag('small', '', array('id' => 'pathcurator-search-results', 'class' => 'text-muted ml-2'));
         
         echo html_writer::end_div(); // d-flex
         echo html_writer::end_div(); // col-md-6
@@ -619,7 +637,7 @@ if (!empty($pathcurator->jsondata)) {
                     $stepcontent .= html_writer::div(
                         html_writer::tag('h5', get_string('pausereflect', 'pathcurator'), array('class' => 'mb-2')) .
                         html_writer::div(format_text($step['pauseAndReflect'], FORMAT_MARKDOWN)),
-                        'card card-body bg-warning mb-3'
+                        'card card-body pathcurator-pause-reflect mb-3'
                     );
                 }
                 
