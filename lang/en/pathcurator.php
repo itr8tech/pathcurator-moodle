@@ -65,3 +65,4 @@ $string['pausereflect'] = 'Pause and Reflect';
 $string['progresstitle'] = 'Learning Progress';
 $string['bonuslinks'] = 'Bonus Links';
 $string['bonuslinksdesc'] = 'Launching these links does not count towards your overall progress on this path.';
+$string['scrolltotop'] = 'Scroll to top';

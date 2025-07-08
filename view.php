@@ -107,8 +107,12 @@ require(['jquery'], function($) {
                     $(this).replaceWith(text);
                 });
                 $('#pathcurator-search-results').text('');
+                $('#pathcurator-clear-search').hide();
                 return;
             }
+            
+            // Show clear search button when search is active
+            $('#pathcurator-clear-search').show();
             
             // Search through each step
             $('.pathcurator-step').each(function() {
@@ -280,6 +284,26 @@ require(['jquery'], function($) {
             }
         });
         
+        // Scroll to top functionality
+        $('#pathcurator-scroll-top').on('click', function(e) {
+            e.preventDefault();
+            console.log('Scroll to top clicked');
+            $('html, body').animate({scrollTop: 0}, 500);
+            return false;
+        });
+        
+        // Show/hide scroll to top button based on scroll position
+        $(window).on('scroll', function() {
+            var scrollTop = $(window).scrollTop();
+            
+            // Show button when scrolled down more than 200px
+            if (scrollTop > 200) {
+                $('#pathcurator-scroll-top').show();
+            } else {
+                $('#pathcurator-scroll-top').hide();
+            }
+        });
+        
         // Initialize progress display
         updateProgress();
     });
@@ -292,6 +316,23 @@ echo $OUTPUT->header();
 echo html_writer::start_div('container-fluid');
 echo html_writer::start_div('row justify-content-center');
 echo html_writer::start_div('col-xl-8 col-lg-10');
+
+// Display JSON file info for teachers/admins
+if (has_capability('mod/pathcurator:addinstance', $modulecontext) || is_siteadmin()) {
+    if (!empty($pathcurator->jsondata)) {
+        echo html_writer::start_div('alert alert-info mb-3');
+        echo html_writer::tag('h6', 'Source JSON File', array('class' => 'alert-heading mb-2'));
+        echo html_writer::tag('p', 'This pathway was created from an uploaded JSON file. As an instructor, you can download the source file for backup or editing purposes.', array('class' => 'mb-2'));
+        
+        // Create download link
+        $downloadurl = new moodle_url('/mod/pathcurator/download.php', array('id' => $cm->id));
+        echo html_writer::link($downloadurl, 
+            html_writer::tag('i', '', array('class' => 'fa fa-download')) . ' Download JSON Source',
+            array('class' => 'btn btn-sm btn-outline-primary')
+        );
+        echo html_writer::end_div();
+    }
+}
 
 // Display the activity intro.
 if ($pathcurator->intro) {
@@ -326,12 +367,18 @@ if (!empty($pathcurator->jsondata)) {
             );
         }
         
-        // Progress bar
-        echo html_writer::start_div('mb-4');
-        echo html_writer::tag('h5', get_string('progresstitle', 'pathcurator'), array('class' => 'mb-2'));
+        // Sticky control bar
+        echo html_writer::start_div('sticky-top bg-white shadow-sm mb-4', array('style' => 'z-index: 1020; padding: 15px 0;'));
+        echo html_writer::start_div('container-fluid');
+        echo html_writer::start_div('row justify-content-center');
+        echo html_writer::start_div('col');
+        
+        // Progress bar section
+        echo html_writer::start_div('mb-3');
+        echo html_writer::tag('h6', get_string('progresstitle', 'pathcurator'), array('class' => 'mb-2 text-muted'));
         echo html_writer::start_div('row align-items-center');
         echo html_writer::start_div('col-md-8');
-        echo html_writer::start_div('progress', array('style' => 'height: 30px;'));
+        echo html_writer::start_div('progress', array('style' => 'height: 25px;'));
         echo html_writer::div('', 'progress-bar progress-bar-striped bg-success', array(
             'id' => 'pathcurator-progress-bar',
             'role' => 'progressbar',
@@ -345,40 +392,67 @@ if (!empty($pathcurator->jsondata)) {
         echo html_writer::start_div('col-md-4 text-right');
         echo html_writer::tag('span', '', array(
             'id' => 'pathcurator-progress-text',
-            'class' => 'font-weight-bold'
+            'class' => 'font-weight-bold small'
         ));
         echo html_writer::end_div(); // col-md-4
         echo html_writer::end_div(); // row
-        echo html_writer::end_div(); // mb-4
+        echo html_writer::end_div(); // mb-3
         
-        // Add search interface.
-        echo html_writer::start_div('mb-4');
-        echo html_writer::start_div('row');
-        echo html_writer::start_div('col-md-6');
+        // Search and controls section
+        echo html_writer::start_div('row align-items-center');
+        
+        // Search field with clear button
+        echo html_writer::start_div('col-md-6 mb-2');
         echo html_writer::tag('label', get_string('searchpathway', 'pathcurator'), 
             array('for' => 'pathcurator-search', 'class' => 'sr-only'));
+        echo html_writer::start_div('input-group input-group-sm');
         echo html_writer::tag('input', '', array(
             'type' => 'text',
             'id' => 'pathcurator-search',
             'class' => 'form-control',
             'placeholder' => get_string('searchplaceholder', 'pathcurator')
         ));
-        echo html_writer::end_div();
-        echo html_writer::start_div('col-md-6');
-        echo html_writer::tag('div', '', array('id' => 'pathcurator-search-results', 'class' => 'text-muted mt-2'));
-        echo html_writer::end_div();
-        echo html_writer::end_div();
-        echo html_writer::end_div();
+        echo html_writer::start_div('input-group-append');
+        echo html_writer::tag('button', '×', array(
+            'class' => 'btn btn-outline-secondary',
+            'type' => 'button',
+            'id' => 'pathcurator-clear-search',
+            'style' => 'display: none;',
+            'title' => get_string('clearsearch', 'pathcurator')
+        ));
+        echo html_writer::end_div(); // input-group-append
+        echo html_writer::end_div(); // input-group
+        echo html_writer::end_div(); // col-md-6
         
-        // Add expand/collapse all buttons.
-        echo html_writer::start_div('mb-3');
+        // Controls and search results
+        echo html_writer::start_div('col-md-6 mb-2');
+        echo html_writer::start_div('d-flex justify-content-between align-items-center');
+        
+        // Control buttons
+        echo html_writer::start_div('btn-group btn-group-sm', array('role' => 'group'));
         echo html_writer::tag('button', get_string('expandall', 'pathcurator'), 
-            array('class' => 'btn btn-outline-primary btn-sm mr-2', 'id' => 'pathcurator-expand-all'));
+            array('class' => 'btn btn-outline-primary btn-sm', 'id' => 'pathcurator-expand-all'));
         echo html_writer::tag('button', get_string('collapseall', 'pathcurator'), 
             array('class' => 'btn btn-outline-secondary btn-sm', 'id' => 'pathcurator-collapse-all'));
-        echo html_writer::tag('button', get_string('clearsearch', 'pathcurator'), 
-            array('class' => 'btn btn-outline-warning btn-sm ml-2', 'id' => 'pathcurator-clear-search'));
-        echo html_writer::end_div();
+        echo html_writer::tag('button', '↑', array(
+            'class' => 'btn btn-outline-dark btn-sm',
+            'id' => 'pathcurator-scroll-top',
+            'title' => get_string('scrolltotop', 'pathcurator'),
+            'style' => 'display: none;'
+        ));
+        echo html_writer::end_div(); // btn-group
+        
+        // Search results
+        echo html_writer::tag('small', '', array('id' => 'pathcurator-search-results', 'class' => 'text-muted ml-2'));
+        
+        echo html_writer::end_div(); // d-flex
+        echo html_writer::end_div(); // col-md-6
+        echo html_writer::end_div(); // row
+        
+        echo html_writer::end_div(); // col
+        echo html_writer::end_div(); // row
+        echo html_writer::end_div(); // container-fluid
+        echo html_writer::end_div(); // sticky-top
         
         // Display steps.
         if (!empty($pathway['steps'])) {
@@ -563,6 +637,26 @@ if (!empty($pathcurator->jsondata)) {
             echo html_writer::end_div();
         } else {
             echo $OUTPUT->notification(get_string('nosteps', 'pathcurator'), 'info');
+        }
+        
+        // Add pathway-level acknowledgments if present (check multiple possible field names).
+        $acknowledgmentText = '';
+        if (!empty($pathway['acknowledgments'])) {
+            $acknowledgmentText = $pathway['acknowledgments'];
+        } elseif (!empty($pathway['acknowledgements'])) {
+            $acknowledgmentText = $pathway['acknowledgements'];
+        } elseif (!empty($pathway['acknowledgment'])) {
+            $acknowledgmentText = $pathway['acknowledgment'];
+        } elseif (!empty($pathway['acknowledge'])) {
+            $acknowledgmentText = $pathway['acknowledge'];
+        }
+        
+        if (!empty($acknowledgmentText)) {
+            echo html_writer::div(
+                html_writer::tag('h4', get_string('acknowledgments', 'pathcurator'), array('class' => 'mb-3')) .
+                html_writer::div(format_text($acknowledgmentText, FORMAT_MARKDOWN)),
+                'card card-body bg-light mt-4'
+            );
         }
         
     } else {

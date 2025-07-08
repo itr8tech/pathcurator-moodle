@@ -121,3 +121,33 @@
     color: #495057;
     font-size: 0.95rem;
 }
+
+/* Sticky control bar */
+.sticky-top {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.sticky-top .progress {
+    border-radius: 0.25rem;
+}
+
+.sticky-top .form-control-sm {
+    border-radius: 0.25rem;
+}
+
+.sticky-top .btn-group-sm .btn {
+    font-size: 0.75rem;
+}
+
+/* Scroll to top button */
+#pathcurator-scroll-top {
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1;
+    transition: all 0.3s ease;
+}
+
+#pathcurator-scroll-top:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
