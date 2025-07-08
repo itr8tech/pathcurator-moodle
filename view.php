@@ -423,8 +423,7 @@ if (!empty($pathcurator->jsondata)) {
         // Display pathway description if present.
         if (!empty($pathway['description'])) {
             echo html_writer::div(
-                html_writer::tag('h4', get_string('description', 'pathcurator'), array('class' => 'mb-2')) .
-                html_writer::div(format_text($pathway['description']), 'text-muted mt-2'),
+                html_writer::div(format_text($pathway['description']), ''),
                 'card card-body bg-light mb-4'
             );
         }
@@ -543,7 +542,7 @@ if (!empty($pathcurator->jsondata)) {
                 
                 // Step header with objective.
                 $stepheader = html_writer::start_span('pathcurator-step-header-content');
-                $stepheader .= html_writer::tag('span', get_string('step', 'pathcurator', $stepnum) . ': ' . $step['name'], array('class' => 'step-title'));
+                $stepheader .= html_writer::tag('span', get_string('step', 'pathcurator', $stepnum) . ': ' . $step['name'], array('class' => 'step-title', 'style' => 'font-size: 18px'));
                 
                 // Add badges
                 $stepheader .= html_writer::start_span('step-badges ml-3');
