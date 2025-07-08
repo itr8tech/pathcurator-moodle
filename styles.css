@@ -164,3 +164,49 @@
     background-color: #e6f3ff;
     border-color: #b8e0ff;
 }
+
+/* Step header badges styling */
+.pathcurator-step summary {
+    display: block;
+    position: relative;
+}
+
+.pathcurator-step-header-content {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    width: 100%;
+    padding-left: 1.5rem; /* Space for the caret */
+}
+
+.pathcurator-step-header-content .step-title {
+    flex: 1;
+    min-width: 0; /* Allow text to wrap */
+}
+
+.pathcurator-step-header-content .step-badges {
+    display: flex;
+    align-items: center;
+    margin-left: 1rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.pathcurator-step-header-content .step-badges .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Adjust the caret position */
+.pathcurator-step summary::before {
+    position: absolute;
+    left: 0.5rem;
+    top: 1.2rem; /* Align with the first line of text */
+}
+
+/* Step objective styling */
+.pathcurator-step-objective {
+    width: 100%;
+    margin-left: 1.5rem; /* Align with the step title */
+}

@@ -176,20 +176,34 @@ require(['jquery'], function($) {
         function highlightText(element, searchTerm) {
             if (searchTerm === '') return;
             
+            // Store original text content before any highlighting
+            if (!element.data('original-html')) {
+                element.data('original-html', element.html());
+            }
+            
+            // Restore original content to remove all previous highlights
+            element.html(element.data('original-html'));
+            
+            // Only highlight if search term is 3+ characters to avoid breaking HTML
+            if (searchTerm.length < 3) {
+                return;
+            }
+            
+            // Walk through text nodes only to avoid breaking HTML structure
             element.find('*').addBack().contents().filter(function() {
                 return this.nodeType === 3; // Text nodes only
             }).each(function() {
-                var text = $(this).text();
+                var textNode = this;
+                var text = textNode.nodeValue;
                 var lowerText = text.toLowerCase();
                 var lowerSearchTerm = searchTerm.toLowerCase();
-                var index = lowerText.indexOf(lowerSearchTerm);
                 
-                if (index !== -1) {
-                    var beforeText = text.substring(0, index);
-                    var matchText = text.substring(index, index + searchTerm.length);
-                    var afterText = text.substring(index + searchTerm.length);
-                    var highlightedText = beforeText + '<span class=\"search-highlight\">' + matchText + '</span>' + afterText;
-                    $(this).replaceWith(highlightedText);
+                if (lowerText.indexOf(lowerSearchTerm) !== -1) {
+                    var parent = $(textNode.parentNode);
+                    if (!parent.hasClass('search-highlight')) {
+                        var highlightedText = text.replace(new RegExp(searchTerm, 'gi'), '<span class=\"search-highlight\">$&</span>');
+                        $(textNode).replaceWith(highlightedText);
+                    }
                 }
             });
         }
@@ -257,6 +271,27 @@ require(['jquery'], function($) {
             $('#pathcurator-progress-text').text(launchedRequiredCount + ' of ' + totalRequiredLinks + ' required links launched (' + percentage + '%)');
         }
         
+        // Function to update step badges
+        function updateStepBadges() {
+            var launchedLinks = getLaunchedLinks();
+            
+            // Update each step's launched badge
+            $('.pathcurator-step').each(function(stepIndex) {
+                var launchedInStep = 0;
+                
+                // Count launched links in this step
+                $(this).find('.pathcurator-launch-btn').each(function() {
+                    var url = $(this).data('bookmark-url');
+                    if (url && launchedLinks.includes(url)) {
+                        launchedInStep++;
+                    }
+                });
+                
+                // Update the badge for this step
+                $('.step-launched-badge[data-step-index=\"' + stepIndex + '\"]').text('Launched ' + launchedInStep);
+            });
+        }
+        
         // Track launched links in cookies
         $('.pathcurator-launch-btn').on('click', function() {
             var url = $(this).data('bookmark-url');
@@ -272,6 +307,9 @@ require(['jquery'], function($) {
                 
                 // Update progress
                 updateProgress();
+                
+                // Update step badges
+                updateStepBadges();
             }
         });
         
@@ -283,6 +321,9 @@ require(['jquery'], function($) {
                 $(this).addClass('btn-success').removeClass('btn-primary');
             }
         });
+        
+        // Update step badges on page load
+        updateStepBadges();
         
         // Scroll to top functionality
         $(document).on('click', '#pathcurator-scroll-top', function(e) {
@@ -324,6 +365,9 @@ require(['jquery'], function($) {
         
         // Initialize progress display
         updateProgress();
+        
+        // Initialize step badges
+        updateStepBadges();
     });
 });
 ");
@@ -380,7 +424,7 @@ if (!empty($pathcurator->jsondata)) {
         if (!empty($pathway['description'])) {
             echo html_writer::div(
                 html_writer::tag('h4', get_string('description', 'pathcurator'), array('class' => 'mb-2')) .
-                html_writer::tag('p', format_text($pathway['description']), array('class' => 'text-muted')),
+                html_writer::div(format_text($pathway['description']), 'text-muted mt-2'),
                 'card card-body bg-light mb-4'
             );
         }
@@ -477,17 +521,47 @@ if (!empty($pathcurator->jsondata)) {
             echo html_writer::start_div('pathcurator-steps');
             
             $stepnum = 1;
-            foreach ($pathway['steps'] as $step) {
+            foreach ($pathway['steps'] as $stepIndex => $step) {
                 $stephtml = '';
                 
+                // Count required and bonus bookmarks for this step
+                $requiredCount = 0;
+                $bonusCount = 0;
+                if (!empty($step['bookmarks'])) {
+                    foreach ($step['bookmarks'] as $bookmark) {
+                        if (empty($bookmark['title']) || empty($bookmark['url'])) {
+                            continue;
+                        }
+                        $bookmarkType = !empty($bookmark['type']) ? strtolower($bookmark['type']) : 'required';
+                        if ($bookmarkType === 'required') {
+                            $requiredCount++;
+                        } else {
+                            $bonusCount++;
+                        }
+                    }
+                }
+                
                 // Step header with objective.
-                $stepheader = get_string('step', 'pathcurator', $stepnum) . ': ' . $step['name'];
+                $stepheader = html_writer::start_span('pathcurator-step-header-content');
+                $stepheader .= html_writer::tag('span', get_string('step', 'pathcurator', $stepnum) . ': ' . $step['name'], array('class' => 'step-title'));
+                
+                // Add badges
+                $stepheader .= html_writer::start_span('step-badges ml-3');
+                $stepheader .= html_writer::tag('span', get_string('required', 'pathcurator') . ' ' . $requiredCount, 
+                    array('class' => 'badge badge-primary mr-1'));
+                $stepheader .= html_writer::tag('span', get_string('bonus', 'pathcurator') . ' ' . $bonusCount, 
+                    array('class' => 'badge badge-secondary mr-1'));
+                $stepheader .= html_writer::tag('span', get_string('launched', 'pathcurator') . ' 0', 
+                    array('class' => 'badge badge-success step-launched-badge', 'data-step-index' => $stepIndex));
+                $stepheader .= html_writer::end_span(); // step-badges
+                $stepheader .= html_writer::end_span(); // pathcurator-step-header-content
+                
+                // Add objective as a separate block outside the flex container
                 if (!empty($step['objective'])) {
-                    $stepheader .= html_writer::tag('br', '') . 
-                        html_writer::tag('span', 
-                            html_writer::tag('em', format_text($step['objective'], FORMAT_MARKDOWN)),
-                            array('class' => 'h6 text-dark')
-                        );
+                    $stepheader .= html_writer::tag('span', 
+                        format_text($step['objective'], FORMAT_MARKDOWN),
+                        array('class' => 'd-block h6 mt-2 text-dark pathcurator-step-objective')
+                    );
                 }
                 
                 // Step content.
@@ -516,7 +590,7 @@ if (!empty($pathcurator->jsondata)) {
                     $bookmarkshtml = '';
                     
                     // Function to render a bookmark
-                    $renderBookmark = function($bookmark) {
+                    $renderBookmark = function($bookmark) use ($stepIndex) {
                         $bookmarkType = !empty($bookmark['type']) ? strtolower($bookmark['type']) : 'required';
                         $borderclass = $bookmarkType === 'required' ? 'border-primary' : 'border-secondary';
                         
@@ -570,7 +644,8 @@ if (!empty($pathcurator->jsondata)) {
                                     'target' => '_blank',
                                     'class' => 'btn btn-primary pathcurator-launch-btn',
                                     'data-bookmark-url' => $bookmark['url'],
-                                    'data-bookmark-type' => $bookmarkType
+                                    'data-bookmark-type' => $bookmarkType,
+                                    'data-step-index' => $stepIndex
                                 )
                             );
                         }
