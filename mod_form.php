@@ -62,10 +62,21 @@ class mod_pathcurator_mod_form extends moodleform_mod {
         // Adding the standard "intro" and "introformat" fields.
         $this->standard_intro_elements();
 
+        // Adding the pathway data section.
+        $mform->addElement('header', 'pathwaydata', get_string('pathwaydata', 'pathcurator'));
+        
+        // Add a static description
+        $mform->addElement('static', 'dataoptionsdesc', '', get_string('dataoptionsdesc', 'pathcurator'));
+
         // Adding the JSON file upload field.
         $mform->addElement('filepicker', 'jsonfile', get_string('jsonfile', 'pathcurator'), null,
                            array('accepted_types' => '.json'));
         $mform->addHelpButton('jsonfile', 'jsonfile', 'pathcurator');
+        
+        // Adding the JSON URL field.
+        $mform->addElement('text', 'jsonurl', get_string('jsonurl', 'pathcurator'), array('size' => '64'));
+        $mform->setType('jsonurl', PARAM_URL);
+        $mform->addHelpButton('jsonurl', 'jsonurl', 'pathcurator');
 
         // Add standard elements, common to all modules.
         $this->standard_coursemodule_elements();
@@ -86,27 +97,48 @@ class mod_pathcurator_mod_form extends moodleform_mod {
         
         $errors = parent::validation($data, $files);
 
-        // Validate JSON file if uploaded.
+        // Check if a file was actually uploaded.
+        $hasFile = false;
         if (!empty($data['jsonfile'])) {
             $draftitemid = $data['jsonfile'];
             $usercontext = context_user::instance($USER->id);
             $fs = get_file_storage();
             $files = $fs->get_area_files($usercontext->id, 'user', 'draft', $draftitemid, 'id', false);
+            $hasFile = !empty($files);
+        }
+        
+        $hasUrl = !empty($data['jsonurl']);
+        
+        // Check that either JSON file or URL is provided, but not both.
+        if (!$hasFile && !$hasUrl) {
+            $errors['jsonfile'] = get_string('mustsupplydata', 'pathcurator');
+            $errors['jsonurl'] = get_string('mustsupplydata', 'pathcurator');
+        } else if ($hasFile && $hasUrl) {
+            $errors['jsonfile'] = get_string('onlyonedata', 'pathcurator');
+            $errors['jsonurl'] = get_string('onlyonedata', 'pathcurator');
+        }
+
+        // Validate JSON file if uploaded.
+        if ($hasFile && !empty($files)) {
+            $file = reset($files);
+            $content = $file->get_content();
+            $json = json_decode($content, true);
             
-            if ($files) {
-                $file = reset($files);
-                $content = $file->get_content();
-                $json = json_decode($content, true);
-                
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    $errors['jsonfile'] = get_string('invalidjson', 'pathcurator');
-                } else {
-                    // Validate PathCurator JSON structure
-                    $validationErrors = $this->validate_pathcurator_json($json);
-                    if (!empty($validationErrors)) {
-                        $errors['jsonfile'] = implode(', ', $validationErrors);
-                    }
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $errors['jsonfile'] = get_string('invalidjson', 'pathcurator');
+            } else {
+                // Validate PathCurator JSON structure
+                $validationErrors = $this->validate_pathcurator_json($json);
+                if (!empty($validationErrors)) {
+                    $errors['jsonfile'] = implode(', ', $validationErrors);
                 }
+            }
+        }
+        
+        // Validate URL if provided.
+        if ($hasUrl) {
+            if (!filter_var($data['jsonurl'], FILTER_VALIDATE_URL)) {
+                $errors['jsonurl'] = get_string('invalidurl', 'pathcurator');
             }
         }
 

@@ -34,18 +34,28 @@ function pathcurator_add_instance($pathcurator) {
 
     $pathcurator->timemodified = time();
     
-    // Process the uploaded JSON file if present.
+    // Handle pathway data source.
+    $hasFile = false;
     if (!empty($pathcurator->jsonfile)) {
+        // Check if a file was actually uploaded.
         $draftitemid = $pathcurator->jsonfile;
         $usercontext = context_user::instance($USER->id);
         $fs = get_file_storage();
         $files = $fs->get_area_files($usercontext->id, 'user', 'draft', $draftitemid, 'id', false);
         
         if ($files) {
+            $hasFile = true;
             $file = reset($files);
             $content = $file->get_content();
             $pathcurator->jsondata = $content;
+            // Clear URL if using file.
+            $pathcurator->jsonurl = null;
         }
+    }
+    
+    if (!$hasFile && !empty($pathcurator->jsonurl)) {
+        // Clear jsondata if using URL.
+        $pathcurator->jsondata = null;
     }
     
     // Remove the jsonfile field as it's not a database field.
@@ -67,18 +77,28 @@ function pathcurator_update_instance($pathcurator) {
     $pathcurator->timemodified = time();
     $pathcurator->id = $pathcurator->instance;
     
-    // Process the uploaded JSON file if present.
+    // Handle pathway data source.
+    $hasFile = false;
     if (!empty($pathcurator->jsonfile)) {
+        // Check if a file was actually uploaded.
         $draftitemid = $pathcurator->jsonfile;
         $usercontext = context_user::instance($USER->id);
         $fs = get_file_storage();
         $files = $fs->get_area_files($usercontext->id, 'user', 'draft', $draftitemid, 'id', false);
         
         if ($files) {
+            $hasFile = true;
             $file = reset($files);
             $content = $file->get_content();
             $pathcurator->jsondata = $content;
+            // Clear URL if using file.
+            $pathcurator->jsonurl = null;
         }
+    }
+    
+    if (!$hasFile && !empty($pathcurator->jsonurl)) {
+        // Clear jsondata if using URL.
+        $pathcurator->jsondata = null;
     }
     
     // Remove the jsonfile field as it's not a database field.

@@ -12,6 +12,7 @@
         <FIELD NAME="intro" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="General introduction of the pathcurator activity"/>
         <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Format of the intro field (MOODLE, HTML, MARKDOWN...)"/>
         <FIELD NAME="jsondata" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON data for the pathway"/>
+        <FIELD NAME="jsonurl" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="URL to fetch JSON data from"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>

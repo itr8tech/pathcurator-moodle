@@ -404,8 +404,37 @@ if ($pathcurator->intro) {
 }
 
 // Parse and display the pathway data.
-if (!empty($pathcurator->jsondata)) {
-    $pathwaydata = json_decode($pathcurator->jsondata, true);
+$jsonContent = null;
+
+// Check if we need to fetch from URL.
+if (!empty($pathcurator->jsonurl)) {
+    // Fetch JSON from URL.
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $pathcurator->jsonurl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    
+    $jsonContent = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($httpCode !== 200 || empty($jsonContent)) {
+        echo html_writer::div(
+            get_string('errorloadingurl', 'pathcurator'),
+            'alert alert-danger'
+        );
+        echo $OUTPUT->footer();
+        exit;
+    }
+} else if (!empty($pathcurator->jsondata)) {
+    // Use stored JSON data.
+    $jsonContent = $pathcurator->jsondata;
+}
+
+if (!empty($jsonContent)) {
+    $pathwaydata = json_decode($jsonContent, true);
     
     if (json_last_error() === JSON_ERROR_NONE && !empty($pathwaydata)) {
         $pathway = reset($pathwaydata); // Get first pathway object
@@ -611,16 +640,10 @@ if (!empty($pathcurator->jsondata)) {
                         $badges .= html_writer::tag('span', $typeLabel, 
                             array('class' => $typebadgeclass));
                         
-                        // Type badge if present (can be any string).
-                        if (!empty($bookmark['type'])) {
-                            $badges .= ' ' . html_writer::tag('span', $bookmark['type'], 
-                                array('class' => 'badge badge-info ml-1'));
-                        }
-                        
                         // Content type badge if present.
                         if (!empty($bookmark['contentType'])) {
-                            $badges .= ' ' . html_writer::tag('span', $bookmark['contentType'], 
-                                array('class' => 'badge badge-warning ml-1'));
+                            $badges .= ' ' . html_writer::tag('span', ucwords($bookmark['contentType']), 
+                                array('class' => 'badge badge-dark ml-1'));
                         }
                         
                         $badges .= html_writer::end_div();

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other meta-data are defined here.
+ * PathCurator module upgrade code
  *
  * @package     mod_pathcurator
  * @copyright   2025 Your Name <you@example.com>
@@ -24,10 +24,29 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'mod_pathcurator';
-$plugin->version = 2025010901;
-$plugin->release = 'v1.0';
-$plugin->requires = 2021111500; // Moodle 4.0
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->cron = 0;
-$plugin->dependencies = array();
+/**
+ * Execute mod_pathcurator upgrade from the given old version
+ *
+ * @param int $oldversion
+ * @return bool
+ */
+function xmldb_pathcurator_upgrade($oldversion) {
+    global $DB;
+    $dbman = $DB->get_manager();
+
+    if ($oldversion < 2025010901) {
+        // Define field jsonurl to be added to pathcurator.
+        $table = new xmldb_table('pathcurator');
+        $field = new xmldb_field('jsonurl', XMLDB_TYPE_CHAR, '1333', null, null, null, null, 'jsondata');
+
+        // Conditionally launch add field jsonurl.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Pathcurator savepoint reached.
+        upgrade_mod_savepoint(true, 2025010901, 'pathcurator');
+    }
+
+    return true;
+}
