@@ -251,8 +251,10 @@ require(['jquery'], function($) {
             
             $('.pathcurator-launch-btn').each(function() {
                 var url = $(this).data('bookmark-url');
-                var type = $(this).data('bookmark-type');
-                if (url && type === 'required') {
+                var requiredAttr = $(this).data('bookmark-required');
+                // Handle both string 'true'/'false' and boolean true/false
+                var isRequired = requiredAttr === 'true' || requiredAttr === true;
+                if (url && isRequired) {
                     requiredPageLinks.push(url);
                     totalRequiredLinks++;
                 }
@@ -531,8 +533,9 @@ if (!empty($pathcurator->jsondata)) {
                         if (empty($bookmark['title']) || empty($bookmark['url'])) {
                             continue;
                         }
-                        $bookmarkType = !empty($bookmark['type']) ? strtolower($bookmark['type']) : 'required';
-                        if ($bookmarkType === 'required') {
+                        // Default to true if 'required' field is not present
+                        $isRequired = !isset($bookmark['required']) || $bookmark['required'] === true;
+                        if ($isRequired) {
                             $requiredCount++;
                         } else {
                             $bonusCount++;
@@ -555,10 +558,11 @@ if (!empty($pathcurator->jsondata)) {
                 $stepheader .= html_writer::end_span(); // step-badges
                 $stepheader .= html_writer::end_span(); // pathcurator-step-header-content
                 
-                // Add objective as a separate block outside the flex container
-                if (!empty($step['objective'])) {
+                // Add objective or why as a separate block outside the flex container
+                $stepObjective = !empty($step['objective']) ? $step['objective'] : (!empty($step['why']) ? $step['why'] : '');
+                if (!empty($stepObjective)) {
                     $stepheader .= html_writer::tag('span', 
-                        format_text($step['objective'], FORMAT_MARKDOWN),
+                        format_text($stepObjective, FORMAT_MARKDOWN),
                         array('class' => 'd-block h6 mt-2 text-dark pathcurator-step-objective')
                     );
                 }
@@ -578,8 +582,9 @@ if (!empty($pathcurator->jsondata)) {
                             continue;
                         }
                         
-                        $bookmarkType = !empty($bookmark['type']) ? strtolower($bookmark['type']) : 'required';
-                        if ($bookmarkType === 'required') {
+                        // Default to true if 'required' field is not present
+                        $isRequired = !isset($bookmark['required']) || $bookmark['required'] === true;
+                        if ($isRequired) {
                             $requiredBookmarks[] = $bookmark;
                         } else {
                             $bonusBookmarks[] = $bookmark;
@@ -590,25 +595,32 @@ if (!empty($pathcurator->jsondata)) {
                     
                     // Function to render a bookmark
                     $renderBookmark = function($bookmark) use ($stepIndex) {
-                        $bookmarkType = !empty($bookmark['type']) ? strtolower($bookmark['type']) : 'required';
-                        $borderclass = $bookmarkType === 'required' ? 'border-primary' : 'border-secondary';
+                        // Default to true if 'required' field is not present
+                        $isRequired = !isset($bookmark['required']) || $bookmark['required'] === true;
+                        $borderclass = $isRequired ? 'border-primary' : 'border-secondary';
                         
                         $bookmarkhtml = html_writer::start_div('card mb-3 ' . $borderclass);
-                        $bookmarkhtml .= html_writer::start_div('card-body');
+                        $bookmarkhtml .= html_writer::start_div('card-body bg-light');
                         
                         // Badges at the top.
                         $badges = html_writer::start_div('mb-2');
                         
-                        // Type badge (Required/Bonus).
-                        $typebadgeclass = 'badge badge-' . ($bookmarkType === 'required' ? 'primary' : 'secondary');
-                        $typeLabel = $bookmarkType === 'required' ? get_string('required', 'pathcurator') : get_string('bonus', 'pathcurator');
+                        // Required/Bonus badge.
+                        $typebadgeclass = 'badge badge-' . ($isRequired ? 'primary' : 'secondary');
+                        $typeLabel = $isRequired ? get_string('required', 'pathcurator') : get_string('bonus', 'pathcurator');
                         $badges .= html_writer::tag('span', $typeLabel, 
                             array('class' => $typebadgeclass));
+                        
+                        // Type badge if present (can be any string).
+                        if (!empty($bookmark['type'])) {
+                            $badges .= ' ' . html_writer::tag('span', $bookmark['type'], 
+                                array('class' => 'badge badge-info ml-1'));
+                        }
                         
                         // Content type badge if present.
                         if (!empty($bookmark['contentType'])) {
                             $badges .= ' ' . html_writer::tag('span', $bookmark['contentType'], 
-                                array('class' => 'badge badge-info ml-1'));
+                                array('class' => 'badge badge-warning ml-1'));
                         }
                         
                         $badges .= html_writer::end_div();
@@ -643,7 +655,7 @@ if (!empty($pathcurator->jsondata)) {
                                     'target' => '_blank',
                                     'class' => 'btn btn-primary pathcurator-launch-btn',
                                     'data-bookmark-url' => $bookmark['url'],
-                                    'data-bookmark-type' => $bookmarkType,
+                                    'data-bookmark-required' => $isRequired ? 'true' : 'false',
                                     'data-step-index' => $stepIndex
                                 )
                             );

@@ -190,16 +190,16 @@ class mod_pathcurator_mod_form extends moodleform_mod {
                         continue;
                     }
                     
-                    $required_fields = ['title', 'url', 'type'];
+                    $required_fields = ['title', 'url'];
                     foreach ($required_fields as $field) {
                         if (empty($bookmark[$field])) {
                             $errors[] = "Step {$index}, bookmark {$bIndex} missing required field: {$field}";
                         }
                     }
                     
-                    // Validate bookmark type
-                    if (!empty($bookmark['type']) && !in_array(strtolower($bookmark['type']), ['required', 'bonus'])) {
-                        $errors[] = "Step {$index}, bookmark {$bIndex} type must be 'Required' or 'Bonus'";
+                    // Validate required field is boolean if present
+                    if (isset($bookmark['required']) && !is_bool($bookmark['required'])) {
+                        $errors[] = "Step {$index}, bookmark {$bIndex} 'required' field must be a boolean (true/false)";
                     }
                 }
             }
