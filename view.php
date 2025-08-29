@@ -629,7 +629,7 @@ if (!empty($jsonContent)) {
                 if (!empty($stepObjective)) {
                     $stepheader .= html_writer::tag('span', 
                         format_text($stepObjective, FORMAT_MARKDOWN),
-                        array('class' => 'd-block h6 mt-2 text-dark pathcurator-step-objective')
+                        array('class' => 'd-block h6 mt-2 pr-5 text-dark pathcurator-step-objective')
                     );
                 }
                 
