@@ -102,6 +102,7 @@ require(['jquery'], function($) {
                 // Show all steps and bookmarks
                 $('.pathcurator-step').show();
                 $('.card.mb-3').show();
+                $('.pathcurator-bonus-section').show();
                 $('.search-highlight').each(function() {
                     var text = $(this).text();
                     $(this).replaceWith(text);
@@ -150,6 +151,17 @@ require(['jquery'], function($) {
                         bookmarkElement.hide();
                     }
                 });
+                
+                // Check if bonus section should be visible
+                var bonusSection = stepElement.find('.pathcurator-bonus-section');
+                if (bonusSection.length > 0) {
+                    var visibleBonusLinks = bonusSection.find('.card.mb-3:visible').length;
+                    if (visibleBonusLinks > 0) {
+                        bonusSection.show();
+                    } else {
+                        bonusSection.hide();
+                    }
+                }
                 
                 // Show/hide step based on match
                 if (stepHasMatch) {
@@ -398,6 +410,7 @@ if (has_capability('mod/pathcurator:addinstance', $modulecontext) || is_siteadmi
     }
 }
 
+
 // Display the activity intro.
 if ($pathcurator->intro) {
     echo $OUTPUT->box(format_module_intro('pathcurator', $pathcurator, $cm->id), 'generalbox mod_introbox', 'pathcuratorintro');
@@ -438,6 +451,24 @@ if (!empty($jsonContent)) {
     
     if (json_last_error() === JSON_ERROR_NONE && !empty($pathwaydata)) {
         $pathway = reset($pathwaydata); // Get first pathway object
+        
+        // Display header image if present
+        if (!empty($pathway['headerImage'])) {
+            // Check if the image data includes data URI prefix
+            $imageData = $pathway['headerImage'];
+            if (strpos($imageData, 'data:image/') !== 0) {
+                // Assume it's base64 encoded image data without prefix, add common image prefix
+                $imageData = 'data:image/png;base64,' . $imageData;
+            }
+            
+            echo html_writer::div(
+                html_writer::img($imageData, 'Pathway Header Image', array(
+                    'class' => 'pathcurator-header-image img-fluid',
+                    'style' => 'max-height: 300px; width: 100%; object-fit: cover; border-radius: 8px;'
+                )),
+                'pathcurator-header-container mb-4'
+            );
+        }
         
         // Display content warning if present.
         if (!empty($pathway['contentWarning'])) {
@@ -562,8 +593,14 @@ if (!empty($jsonContent)) {
                         if (empty($bookmark['title']) || empty($bookmark['url'])) {
                             continue;
                         }
-                        // Default to true if 'required' field is not present
-                        $isRequired = !isset($bookmark['required']) || $bookmark['required'] === true;
+                        // Check both 'required' field and 'type' field for backward compatibility
+                        // If type is "Bonus", it's not required
+                        // Otherwise, default to true if 'required' field is not present
+                        if (isset($bookmark['type']) && strtolower($bookmark['type']) === 'bonus') {
+                            $isRequired = false;
+                        } else {
+                            $isRequired = !isset($bookmark['required']) || $bookmark['required'] === true;
+                        }
                         if ($isRequired) {
                             $requiredCount++;
                         } else {
@@ -611,8 +648,14 @@ if (!empty($jsonContent)) {
                             continue;
                         }
                         
-                        // Default to true if 'required' field is not present
-                        $isRequired = !isset($bookmark['required']) || $bookmark['required'] === true;
+                        // Check both 'required' field and 'type' field for backward compatibility
+                        // If type is "Bonus", it's not required
+                        // Otherwise, default to true if 'required' field is not present
+                        if (isset($bookmark['type']) && strtolower($bookmark['type']) === 'bonus') {
+                            $isRequired = false;
+                        } else {
+                            $isRequired = !isset($bookmark['required']) || $bookmark['required'] === true;
+                        }
                         if ($isRequired) {
                             $requiredBookmarks[] = $bookmark;
                         } else {
@@ -624,8 +667,14 @@ if (!empty($jsonContent)) {
                     
                     // Function to render a bookmark
                     $renderBookmark = function($bookmark) use ($stepIndex) {
-                        // Default to true if 'required' field is not present
-                        $isRequired = !isset($bookmark['required']) || $bookmark['required'] === true;
+                        // Check both 'required' field and 'type' field for backward compatibility
+                        // If type is "Bonus", it's not required
+                        // Otherwise, default to true if 'required' field is not present
+                        if (isset($bookmark['type']) && strtolower($bookmark['type']) === 'bonus') {
+                            $isRequired = false;
+                        } else {
+                            $isRequired = !isset($bookmark['required']) || $bookmark['required'] === true;
+                        }
                         $borderclass = $isRequired ? 'border-primary' : 'border-secondary';
                         
                         $bookmarkhtml = html_writer::start_div('card mb-3 ' . $borderclass);
@@ -696,14 +745,16 @@ if (!empty($jsonContent)) {
                     
                     // Add bonus section header and render bonus bookmarks
                     if (!empty($bonusBookmarks)) {
+                        $bookmarkshtml .= html_writer::start_div('pathcurator-bonus-section');
                         $bookmarkshtml .= html_writer::tag('h4', get_string('bonuslinks', 'pathcurator'), 
-                            array('class' => 'mt-4 mb-2'));
+                            array('class' => 'mb-2'));
                         $bookmarkshtml .= html_writer::tag('p', get_string('bonuslinksdesc', 'pathcurator'), 
                             array('class' => 'text-muted mb-3'));
                         
                         foreach ($bonusBookmarks as $bookmark) {
                             $bookmarkshtml .= $renderBookmark($bookmark);
                         }
+                        $bookmarkshtml .= html_writer::end_div();
                     }
                     
                     if (!empty($bookmarkshtml)) {

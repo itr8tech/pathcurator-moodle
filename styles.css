@@ -76,10 +76,12 @@
 /* Enhanced card styling for bookmarks */
 .card.border-primary {
     border-width: 0 0 0 4px;
+    border-color: #007bff !important;
 }
 
 .card.border-secondary {
     border-width: 0 0 0 4px;
+    border-color: #6c757d !important;
 }
 
 /* Launch button enhancements */
@@ -209,4 +211,26 @@
 .pathcurator-step-objective {
     width: 100%;
     margin-left: 1.5rem; /* Align with the step title */
+}
+
+/* Bonus links section styling */
+.pathcurator-bonus-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px dashed #dee2e6;
+}
+
+.pathcurator-bonus-section h4 {
+    color: #6c757d;
+    font-weight: 600;
+}
+
+/* Header image styling */
+.pathcurator-header-container {
+    text-align: center;
+}
+
+.pathcurator-header-image {
+    border: 1px solid #dee2e6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
