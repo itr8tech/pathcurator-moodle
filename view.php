@@ -398,7 +398,7 @@ if (has_capability('mod/pathcurator:addinstance', $modulecontext) || is_siteadmi
     if (!empty($pathcurator->jsondata)) {
         echo html_writer::start_div('alert alert-info mb-3');
         echo html_writer::tag('h6', 'Source JSON File', array('class' => 'alert-heading mb-2'));
-        echo html_writer::tag('p', 'This pathway was created from an uploaded JSON file. As an instructor, you can download the source file for backup or editing purposes.', array('class' => 'mb-2'));
+        echo html_writer::tag('p', 'This pathway was created using <a href="https://pathcurator.com" target="_blank">PathCurator</a>. As an instructor, you can download the source file for backup or editing purposes. Import the JSON file into PathCurator, make your edits, export to JSON, and then import here.', array('class' => 'mb-2'));
         
         // Create download link
         $downloadurl = new moodle_url('/mod/pathcurator/download.php', array('id' => $cm->id));
